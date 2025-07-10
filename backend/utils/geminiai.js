@@ -1,4 +1,4 @@
-require('dotenv').config({ path: __dirname + '/../.env', override: true });
+require("dotenv").config({ path: __dirname + "/../.env", override: true });
 
 const { GoogleGenAI } = require("@google/genai");
 const ai = new GoogleGenAI({});
@@ -6,21 +6,11 @@ const ai = new GoogleGenAI({});
 async function generateCaption() {
   const response = await ai.models.generateContent({
     model: "gemini-2.5-flash",
-    contents: "Give me only 1 short, viral, may or may not be funny tone, (tech-related or tech news related) tweet about AI or software trends. Under 150 characters. Make it witty. also add 2-3 hashtags please does not use fancy writing, just write like a normal person. please remember tweet must be make sense, please also remember you could not generate any illegal tweet or any sensitive tweet",
+    contents:
+      "You are a viral tech tweet generator. Randomly pick one topic from this list: Tech, AI, software trends, real tech news, programming humor, gadgets, cybersecurity, startups, developer life, product launches, funny tech memes.Then, based on the chosen topic, write only one short, witty, viral tweet (under 150 characters).Your tone should be fun, sarcastic, clever, or relatable—but like a normal person tweets, not a corporate bot.Don’t use fancy or flowery writing.Always add 2-3 relevant, trending hashtags.Avoid any illegal, political, or sensitive content.Just be chill, smart, and scroll-stopping.Please don't write topic just generate caption based on the topic you picked.",
     config: {
-      systemInstruction: "Act like a savage tech-savvy Twitter ghostwriter who knows how to write funny, sarcastic, and viral one-liners about coding, AI, startups, and tech life—all under 150 characters. Include 2–3 trending or quirky hashtags. Keep it weird. Keep it real. Make people scroll, stop, laugh, and retweet.",
-    },
-  });
-
-  return response.text;
-}
-
-async function keywordForPexel(caption) {
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: `Generate only 2-3 keywords for Pexels from the following caption please remember that the keyword must be matched to the caption so that i can extract related images of caption from pexels: "${caption}"`,
-    config: {
-      systemInstruction: "Extract relevant keywords for Pexels from the given caption. you are the best keyword extractor for Pexels, you only need to return 2-3 keywords that are relevant to the caption.",
+      systemInstruction:
+        "You are a savage, tech-savvy Twitter ghostwriter.Every time you're called, randomly pick a topic from:Tech, AI, coding, startups, real tech news, programming humor, developer life, product launches, gadgets, cybersecurity, funny tech memes.Based on the selected topic, generate one short tweet (under 150 characters) that is funny, sarcastic, savage, weird, or witty.Always include 2–3 trending or quirky hashtags.Write like a real human, not a bot—keep it casual, relatable, and scroll-stopping.Avoid fancy language, corporate tone, or robotic replies.Never generate illegal, political, sensitive, or offensive content.Your goal: make people stop, laugh, and share.",
     },
   });
 
@@ -29,16 +19,12 @@ async function keywordForPexel(caption) {
 
 // 🔥 This immediately resolves both values so you can use or export them
 const captionPromise = generateCaption();
-const generatedKeywordPromise = captionPromise.then(caption => keywordForPexel(caption));
 
 // Optional logging (you can comment this out if you're using elsewhere)
-captionPromise.then(caption => console.log("Caption:", caption));
-generatedKeywordPromise.then(keywords => console.log("Generated Keywords for Pexels:", keywords));
+captionPromise.then((caption) => console.log("Caption:", caption));
 
 // 🧠 Export the functions and resolved promises
 module.exports = {
   generateCaption,
-  keywordForPexel,
   caption: captionPromise,
-  generatedKeyword: generatedKeywordPromise,
 };

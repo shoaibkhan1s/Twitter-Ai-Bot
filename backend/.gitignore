@@ -82,7 +82,7 @@ web_modules/
 .env.test.local
 .env.production.local
 .env.local
-
+C:\Users\Shoaib\twitter-ai-bot\puppeteer-user-data
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
