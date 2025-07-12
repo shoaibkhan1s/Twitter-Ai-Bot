@@ -1,24 +1,46 @@
 require('dotenv').config({ path: __dirname + '/../.env', override: true });
-const captionPromise = require('./geminiai').caption;
+const captionPromise = require('./caption').caption;
 const { GoogleGenAI } = require("@google/genai");
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 async function generateImagePrompt() {
+  try {
     const caption = await captionPromise;
   const response = await ai.models.generateContent({
     model: "gemini-2.5-flash",
-    contents: `Generate a detailed image generation prompt for Stable Diffusion based on this tweet: "${caption}". 
-The prompt should vividly describe the scene with details about setting, background, lighting, mood, style, and visual composition. 
-Make it futuristic, techy, or imaginative. Do not mention the original text. Keep it within 60 words. 
-Add this line at the end: "The image must be 1:1 in aspect ratio."`,
-    config: {
-      systemInstruction: `You're a professional prompt engineer who turns short tech tweet captions into vivid, engaging prompts for Stable Diffusion or DALL·E. 
-Avoid repetition or vague words. Don't refer to tweet or caption directly. Keep it tech-oriented and visually rich. 
-Limit to 60 words. Always end with: "The image must be 1:1 in aspect ratio."`,
-    },
+   contents: `
+Create a highly realistic scene based on this caption: "${caption}". 
+Show a real human (not cartoonish) in a relatable tech environment — like working on a laptop, fixing a bug, reacting to code error, or browsing tech news. 
+Scene could be indoors (home, desk setup, office) or public (cafe, coworking space). 
+Use natural or soft lighting. Avoid surreal, sci-fi, fantasy, glitchy, or stylized effects. 
+No extra limbs, distortions, or futuristic overlays.
+
+Keep the description concise and under 60 words.
+
+End with: "The image must be 1:1 in aspect ratio. Do not use surreal, cyberpunk, or abstract effects."`,
+  
+config: {
+  systemInstruction: `
+You're a prompt engineer optimizing for Pollinations AI. Your task is to generate **natural, clean, realistic** prompts from short tweet captions.
+
+Every prompt must:
+– Focus on realistic humans doing tech-related activities.
+– Avoid abstract, cyberpunk, glitchy, or fantasy-style visuals.
+– Include clear background and lighting context (day/night, indoor/outdoor).
+– Avoid overly poetic or vague words like “ethereal,” “futuristic haze,” or “matrix aura.”
+– Prevent image errors like extra limbs or weird faces.
+– End every prompt with: "The image must be 1:1 in aspect ratio. Do not use surreal, cyberpunk, or abstract effects.
+- add this line : please do not add watermark."`
+}
+
   });
 
   return response.text;
+  } catch (error) { 
+    console.error("❌ Error generating image prompt:", error);
+    throw error; // Re-throw to handle it in the calling function
+  }
 }
+generateImagePrompt().then(prompt => console.log(prompt)).catch(console.error);
 
 module.exports = generateImagePrompt;
