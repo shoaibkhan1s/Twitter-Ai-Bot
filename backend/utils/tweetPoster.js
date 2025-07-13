@@ -10,7 +10,9 @@ async function postToTwitter(caption, imagePath, { token, secret }) {
   });
 
   const mediaData = fs.readFileSync(imagePath);
-  const mediaId = await client.v1.uploadMedia(mediaData, { mimeType: "image/png" });
+  const mediaId = await client.v1.uploadMedia(mediaData, {
+    mimeType: "image/png",
+  });
 
   const { data } = await client.v2.tweet({
     text: caption,

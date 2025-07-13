@@ -1,17 +1,20 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { motion } from "framer-motion";
 
 export default function App() {
   const [token, setToken] = useState(null);
   const [secret, setSecret] = useState(null);
-  const [interest, setInterest] = useState('tech');
-  const [msg, setMsg] = useState('');
+  const [interest, setInterest] = useState("tech");
+  const [captionType, setCaptionType] = useState("motivational");
+  const [gender, setGender] = useState("neutral");
+  const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const t = params.get('token');
-    const s = params.get('secret');
+    const t = params.get("token");
+    const s = params.get("secret");
     if (t && s) {
       setToken(t);
       setSecret(s);
@@ -21,76 +24,167 @@ export default function App() {
   const handlePost = async () => {
     setLoading(true);
     try {
-      const res = await axios.post('http://localhost:3000/tweet', {
+      const res = await axios.post("http://localhost:3000/tweet", {
         token,
         secret,
-        interest
+        interest,
+        captionType,
+        gender,
       });
-      setMsg(res.data.caption || 'Tweet posted!');
+      setMsg(res.data.caption || "Tweet posted!");
     } catch (err) {
-      setMsg('❌ Something went wrong!');
+      setMsg("❌ Something went wrong!");
     }
     setLoading(false);
   };
 
+  const logout = () => {
+    window.location.href = "http://localhost:3000/auth/twitter/logout";
+  };
+
+  const interests = [
+    "Tech",
+    "Funny",
+    "Finance",
+    "Memes",
+    "Motivation",
+    "DevLife",
+    "Gaming",
+    "Cyber Security",
+    "Health",
+    "Education",
+    "Fitness",
+    "Travel",
+    "Food",
+    "Fashion",
+    "Music",
+    "Art",
+    "Sports",
+    "News",
+    "Lifestyle",
+    "AI",
+    "Startups",
+    "Productivity",
+    "Emotional Growth",
+    "Spirituality",
+    "Business",
+    "Marketing",
+    "Books",
+  ];
+
+  const captionStyles = [
+    { value: "motivational", label: "Motivational Speaker" },
+    { value: "funny", label: "Funny Tone" },
+    { value: "savage", label: "Savage" },
+    { value: "weird", label: "Weirdly Cool" },
+    { value: "chill", label: "Chill & Relatable" },
+  ];
+
   if (!token || !secret) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 p-6">
-        <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center">
-          <h1 className="text-2xl font-bold mb-6">Twitter Auto Poster</h1>
+      <div className="min-h-screen flex items-center justify-center bg-black text-white p-6">
+        <motion.div
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="bg-[rgba(30,30,30,0.85)] backdrop-blur-md p-10 rounded-2xl border border-[#3fefef] shadow-[0_0_25px_#3fefef80] max-w-md w-full text-center"
+        >
+          <h1 className="text-3xl font-bold mb-6 text-[#3fefef]">
+            🚀 Twitter Auto Poster
+          </h1>
           <a
             href="http://localhost:3000/auth/twitter/login"
-            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-xl"
+            className="bg-black border border-[#3fefef] hover:shadow-[0_0_20px_#3fefefaa] text-[#3fefef] px-6 py-3 rounded-xl font-semibold transition-all duration-300"
           >
             Login with Twitter
           </a>
-        </div>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 p-6">
-      <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full">
-        <h1 className="text-2xl font-bold text-center mb-6">Welcome!</h1>
+    <div className="min-h-screen bg-black text-white p-8 overflow-auto">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6 }}
+        className="bg-[rgba(30,30,30,0.85)] backdrop-blur-md p-10 rounded-2xl border border-[#3fefef] shadow-[0_0_25px_#3fefef80] max-w-lg mx-auto"
+      >
+        <h1 className="text-3xl font-extrabold text-center mb-8 text-[#3fefef] animate-pulse">
+          Welcome, Twitter Warrior!
+        </h1>
 
-        <label className="block mb-2 text-gray-700">Select Interest</label>
-        <select
-          className="w-full p-2 border rounded-xl mb-4"
-          value={interest}
-          onChange={(e) => setInterest(e.target.value)}
-        >
-          <option value="tech">Tech</option>
-          <option value="funny">Funny</option>
-          <option value="finance">Finance</option>
-          <option value="memes">Memes</option>
-          <option value="motivation">Motivation</option>
-          <option value="devlife">DevLife</option>
-          <option value="gaming">Gaming</option>
-          <option value="cybersecurity">Cyber Security</option>
-          <option value="health">Health</option>
-          <option value="education">Education</option>
-          <option value="fitness">Fitness</option>
-          <option value="travel">Travel</option>
-          <option value="food">Food</option>
-          <option value="fashion">Fashion</option>
-          <option value="music">Music</option>
-          <option value="art">Art</option>
-          <option value="sports">Sports</option>
-          <option value="news">News</option>
-          <option value="lifestyle">Lifestyle</option>
-        </select>
-
-        <button
-          onClick={handlePost}
-          disabled={loading}
-          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-xl"
-        >
-          {loading ? 'Posting...' : 'Generate & Post'}
-        </button>
-
-        {msg && <p className="mt-4 text-center text-gray-700">{msg}</p>}
-      </div>
+        <div className="space-y-6">
+          <div>
+            <label className="block text-[#3fefef] mb-2">
+              🎯 Select Interest
+            </label>
+            <select
+              className="w-full bg-black border border-[#3fefef] p-3 rounded-xl text-white focus:outline-none"
+              value={interest}
+              onChange={(e) => setInterest(e.target.value)}
+            >
+              {interests.map((option) => (
+                <option key={option} value={option.toLowerCase()}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-[#3fefef] mb-2">
+              👤 Select Gender
+            </label>
+            <select
+              className="w-full bg-black border border-[#3fefef] p-3 rounded-xl text-white focus:outline-none"
+              value={gender}
+              onChange={(e) => setGender(e.target.value)}
+            >
+              <option value="neutral">Neutral</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-[#3fefef] mb-2">
+              🎤 Caption Style
+            </label>
+            <select
+              className="w-full bg-black border border-[#3fefef] p-3 rounded-xl text-white focus:outline-none"
+              value={captionType}
+              onChange={(e) => setCaptionType(e.target.value)}
+            >
+              {captionStyles.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handlePost}
+            disabled={loading}
+            className="w-full bg-black border border-[#3fefef] text-[#3fefef] font-semibold py-3 rounded-xl transition duration-300 hover:shadow-[0_0_20px_#3fefefaa]"
+          >
+            {loading ? "Posting..." : "Generate & Post"}
+          </motion.button>
+          {msg && (
+            <p className="text-center mt-4 text-[#c084fc] animate-fade-in">
+              {msg}
+            </p>
+          )}
+          <button
+            onClick={logout}
+            className="mt-6 w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-xl transition duration-300"
+          >
+            Logout
+          </button>
+        </div>
+      </motion.div>
     </div>
   );
 }

@@ -4,17 +4,19 @@ const passport = require("passport");
 const TwitterStrategy = require("passport-twitter").Strategy;
 const cors = require("cors");
 const dotenv = require("dotenv");
-const twitterRoutes = require("./routes/twitter");
-const  postToTwitter= require("./utils/tweetPoster");
-const generateCaption = require("./utils/caption").generateCaption;
-const generateImagePrompt = require("./utils/promptMaker");
 const fetch = require("node-fetch");
 const fs = require("fs");
 const sharp = require("sharp");
 
+const twitterRoutes = require("./routes/twitter");
+const postToTwitter = require("./utils/tweetPoster");
+const generateCaption = require("./utils/caption").generateCaption;
+const generateImagePrompt = require("./utils/promptMaker");
+
 dotenv.config();
 const app = express();
 
+// Middleware
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
 app.use(
@@ -27,6 +29,7 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Passport setup
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((obj, done) => done(null, obj));
 
@@ -45,6 +48,7 @@ passport.use(
   )
 );
 
+// Routes
 app.use("/auth/twitter", twitterRoutes);
 
 app.get("/me", (req, res) => {
@@ -52,26 +56,28 @@ app.get("/me", (req, res) => {
   res.json({ user: req.user });
 });
 
+// Main tweet posting route
 app.post("/tweet", async (req, res) => {
   try {
-    const { token, secret, interest } = req.body;
-    const caption = await generateCaption(interest);
-    const prompt = await generateImagePrompt(caption);
-    const imageUrl = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=51&model=flux`;
+    const { token, secret, interest, captionType, gender } = req.body;
 
+    const caption = await generateCaption(interest, captionType);
+    const prompt = await generateImagePrompt(caption, gender,interest);
+console.log(prompt)
+    const imageUrl = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=77&model=turbo`;
     const response = await fetch(imageUrl);
     const buffer = await response.buffer();
     fs.writeFileSync("image.png", buffer);
 
     await sharp("image.png")
       .metadata()
-      .then(({ width, height }) => {
-        return sharp("image.png")
+      .then(({ width, height }) =>
+        sharp("image.png")
           .extract({ left: 0, top: 0, width, height: height - 55 })
-          .toFile("newImage.png");
-      });
+          .toFile("newImage.png")
+      );
 
-    await  postToTwitter( caption, "newImage.png",{token, secret});
+    await postToTwitter(caption, "newImage.png", { token, secret });
 
     res.json({ success: true, caption });
   } catch (err) {
