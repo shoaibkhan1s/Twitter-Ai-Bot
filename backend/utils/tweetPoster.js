@@ -1,17 +1,15 @@
-require('dotenv').config({ path: __dirname + '/../.env', override: true });
 const fs = require('fs');
-const path = require('path');
-const {TwitterApi} = require('twitter-api-v2');
+const { TwitterApi } = require('twitter-api-v2');
 
-const client = new TwitterApi({
-    appKey: process.env.API_KEY,
-    appSecret: process.env.API_SECRET,
-    accessToken: process.env.ACCESS_TOKEN,
-    accessSecret: process.env.ACCESS_SECRET,
-});
-
-async function postToTwitter(caption, imagePath) {
+async function postToTwitter(caption, imagePath, { apiKey, apiSecret, accessToken, accessSecret }) {
   try {
+    const client = new TwitterApi({
+      appKey: apiKey,
+      appSecret: apiSecret,
+      accessToken: accessToken,
+      accessSecret: accessSecret,
+    });
+
     const mediaData = fs.readFileSync(imagePath);
     const mediaId = await client.v1.uploadMedia(mediaData, { type: 'png' });
 
@@ -23,8 +21,8 @@ async function postToTwitter(caption, imagePath) {
     console.log('✅ Tweet posted successfully! Tweet ID:', data.id);
   } catch (err) {
     console.error('❌ Failed to post tweet:', err);
+    throw err;
   }
 }
-
 
 module.exports = postToTwitter;

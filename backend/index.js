@@ -1,66 +1,70 @@
-// Example 1: Image Generation
+const express = require('express');
+const cors = require('cors');
+const app = express();
+app.use(cors());
+app.use(express.json());
 
-const fs = require("fs");
 const fetch = require("node-fetch");
+const fs = require("fs");
 const sharp = require("sharp");
+
 const postToTwitter = require("./utils/tweetPoster");
 const generateImagePrompt = require("./utils/promptMaker");
-const { caption } = require("./utils/caption");
+const { generateCaption } = require("./utils/caption");
 
-async function downloadImage(imageUrl, captionText) {
-  try {
-    const response = await fetch(imageUrl);
+async function downloadImage(imageUrl, captionText, twitterCreds) {
+  const inputPath = "image.png";
+  const outputPath = "newImage.png";
 
-    const buffer = await response.buffer();
+  // 🔥 Delete existing image files if they exist (safe cleanup)
+  try { if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath); } catch (e) {}
+  try { if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath); } catch (e) {}
 
-    fs.writeFileSync("image.png", buffer);
+  const response = await fetch(imageUrl);
+  const buffer = await response.buffer();
+  fs.writeFileSync(inputPath, buffer);
 
-    // Input/output path
-    const inputImagePath = "image.png";
-    const outputImagePath = "newImage.png";
+  await sharp(inputPath)
+    .metadata()
+    .then(({ width, height }) => {
+      return sharp(inputPath)
+        .extract({ left: 0, top: 0, width: width, height: height - 55 })
+        .toFile(outputPath);
+    });
 
-    await sharp(inputImagePath)
-      .metadata()
-      .then(({ width, height }) => {
-        return sharp(inputImagePath)
-          .extract({ left: 0, top: 0, width: width, height: height - 55 }) // crop 55px from bottom
-          .toFile(outputImagePath);
-      })
-      .then(() => {
-        console.log("✅ Image cropped, ready to post to Twitter");
-      })
-      .catch((err) => {
-        console.error("❌ Error cropping image:", err);
-      });
+  console.log("✅ Image ready to tweet");
 
-    console.log("Download Completed");
-
-    await postToTwitter(captionText, "newImage.png");
-    console.log("Tweet posted with image successfully!");
-  } catch (error) {
-    console.error("Error downloading image:", error);
-  }
+  await postToTwitter(captionText, outputPath, twitterCreds);
 }
 
-async function main() {
+
+// 🔥 API route to handle frontend request
+app.post('/generate-post', async (req, res) => {
+  const { interest, apiKey, apiSecret, accessToken, accessSecret } = req.body;
+
   try {
-    const prompt = await generateImagePrompt();
-    console.log("Generated Prompt:", prompt);
+    const captionText = await generateCaption(interest);
+    console.log("📝 Caption:", captionText);
 
-    const captionText = await caption;
-    console.log("Generated Caption:", captionText);
+    const imagePrompt = await generateImagePrompt(captionText);
+    console.log("🎨 Image Prompt:", imagePrompt);
 
-    const imageUrl = `https://pollinations.ai/p/${encodeURIComponent(
-      prompt
-    )}?width=1024&height=1024&seed=51&model=flux`;
-    await downloadImage(imageUrl, captionText); // Download the image
+    const imageUrl = `https://pollinations.ai/p/${encodeURIComponent(imagePrompt)}?width=1024&height=1024&seed=51&model=flux`;
+
+    await downloadImage(imageUrl, captionText, {
+      apiKey,
+      apiSecret,
+      accessToken,
+      accessSecret
+    });
+
+    res.json({ success: true, message: "Post tweeted successfully!" });
   } catch (error) {
-    console.error("Error in main function:", error);
+    console.error("❌ Error:", error);
+    res.status(500).json({ success: false, message: "Something went wrong while posting." });
   }
-}
-// 🔁 Cron job: every 30 minutes
-cron.schedule("*/30 * * * *", () => {
-  console.log("🕒 Running auto-post job...");
-  main();
 });
 
+app.listen(3000, () => {
+  console.log("✅ Backend running on http://localhost:3000");
+});
