@@ -1,46 +1,69 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 export default function App() {
-  const [formData, setFormData] = useState({
-    apiKey: '',
-    apiSecret: '',
-    accessToken: '',
-    accessSecret: '',
-    interest: 'tech',
-  });
-  const [loading, setLoading] = useState(false);
+  const [token, setToken] = useState(null);
+  const [secret, setSecret] = useState(null);
+  const [interest, setInterest] = useState('tech');
   const [msg, setMsg] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const t = params.get('token');
+    const s = params.get('secret');
+    if (t && s) {
+      setToken(t);
+      setSecret(s);
+    }
+  }, []);
 
-  const handleSubmit = async () => {
+  const handlePost = async () => {
     setLoading(true);
     try {
-      const res = await axios.post('http://localhost:3000/generate-post', formData);
-      setMsg(res.data.message || 'Posted successfully!');
-    } catch (error) {
-      setMsg('Something went wrong.');
+      const res = await axios.post('http://localhost:3000/tweet', {
+        token,
+        secret,
+        interest
+      });
+      setMsg(res.data.caption || 'Tweet posted!');
+    } catch (err) {
+      setMsg('❌ Something went wrong!');
     }
     setLoading(false);
   };
 
+  if (!token || !secret) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 p-6">
+        <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center">
+          <h1 className="text-2xl font-bold mb-6">Twitter Auto Poster</h1>
+          <a
+            href="http://localhost:3000/auth/twitter/login"
+            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-xl"
+          >
+            Login with Twitter
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 p-6">
       <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full">
-        <h1 className="text-2xl font-bold text-center mb-6">Twitter Auto Poster</h1>
-        <input className="input" name="apiKey" placeholder="API Key" onChange={handleChange} />
-        <input className="input" name="apiSecret" placeholder="API Secret" onChange={handleChange} />
-        <input className="input" name="accessToken" placeholder="Access Token" onChange={handleChange} />
-        <input className="input" name="accessSecret" placeholder="Access Secret" onChange={handleChange} />
+        <h1 className="text-2xl font-bold text-center mb-6">Welcome!</h1>
 
-        <select name="interest" className="input" onChange={handleChange}>
+        <label className="block mb-2 text-gray-700">Select Interest</label>
+        <select
+          className="w-full p-2 border rounded-xl mb-4"
+          value={interest}
+          onChange={(e) => setInterest(e.target.value)}
+        >
           <option value="tech">Tech</option>
           <option value="funny">Funny</option>
           <option value="finance">Finance</option>
-          <option value="memes">Memes</option>  
+          <option value="memes">Memes</option>
           <option value="motivation">Motivation</option>
           <option value="devlife">DevLife</option>
           <option value="gaming">Gaming</option>
@@ -59,14 +82,14 @@ export default function App() {
         </select>
 
         <button
-          onClick={handleSubmit}
-          className="bg-indigo-600 text-white py-2 px-4 mt-4 rounded-xl w-full hover:bg-indigo-700"
+          onClick={handlePost}
           disabled={loading}
+          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-xl"
         >
           {loading ? 'Posting...' : 'Generate & Post'}
         </button>
 
-        {msg && <p className="text-center mt-4 text-gray-700">{msg}</p>}
+        {msg && <p className="mt-4 text-center text-gray-700">{msg}</p>}
       </div>
     </div>
   );
