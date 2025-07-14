@@ -10,10 +10,15 @@ router.get(
     failureRedirect: "/auth/twitter/failure",
   }),
   (req, res) => {
-    const { token, tokenSecret } = req.user;
-    res.redirect(`http://localhost:5173?token=${token}&secret=${tokenSecret}`);
+    // Token and Secret already attached to req.user by Passport
+    req.session.token = req.user.token;
+    req.session.secret = req.user.tokenSecret;
+
+    // Redirect without token/secret in URL
+    res.redirect("http://localhost:5173");
   }
 );
+
 
 router.get("/failure", (req, res) => {
   res.send("❌ Twitter login failed.");

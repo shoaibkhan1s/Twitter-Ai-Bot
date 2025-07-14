@@ -56,6 +56,8 @@ app.get("/me", (req, res) => {
   res.json({ user: req.user });
 });
 
+
+
 // Main tweet posting route
 app.post("/tweet", async (req, res) => {
   try {
@@ -67,7 +69,7 @@ console.log(prompt)
     const imageUrl = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=77&model=turbo`;
     const response = await fetch(imageUrl);
     const buffer = await response.buffer();
-    fs.writeFileSync("image.png", buffer);
+  fs.writeFileSync("image.png", buffer);
 
     await sharp("image.png")
       .metadata()
@@ -85,6 +87,19 @@ console.log(prompt)
     res.status(500).json({ error: "Tweet failed" });
   }
 });
+
+// New secure route to serve token/secret from session
+app.get("/auth/twitter/session", (req, res) => {
+  if (req.session.token && req.session.secret) {
+    res.json({
+      user: req.user,
+      token: req.session.token, 
+      secret: req.session.secret });
+  } else {
+    res.status(401).json({ error: "No active session" });
+  }
+});
+
 
 app.listen(3000, () => {
   console.log("✅ Backend running on http://localhost:3000");

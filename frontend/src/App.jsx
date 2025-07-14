@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
+axios.defaults.withCredentials = true;
 
 export default function App() {
   const [token, setToken] = useState(null);
@@ -10,15 +11,25 @@ export default function App() {
   const [gender, setGender] = useState("neutral");
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const t = params.get("token");
-    const s = params.get("secret");
-    if (t && s) {
-      setToken(t);
-      setSecret(s);
-    }
+    const fetchSession = async () => {
+      try {
+        const res = await axios.get(
+          "http://localhost:3000/auth/twitter/session",
+          {
+            withCredentials: true,
+          }
+        );
+        setUser(res.data.user);
+        setToken(res.data.token);
+        setSecret(res.data.secret);
+      } catch (err) {
+        console.log("🔒 No active session.");
+      }
+    };
+    fetchSession();
   }, []);
 
   const handlePost = async () => {
@@ -109,10 +120,17 @@ export default function App() {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.6 }}
-        className="bg-[rgba(30,30,30,0.85)] backdrop-blur-md p-10 rounded-2xl border border-[#3fefef] shadow-[0_0_25px_#3fefef80] max-w-lg mx-auto"
+        className="bg-[rgba(30,30,30,0.85)] backdrop-blur-md p-10 rounded-2xl border border-[#3fefef] shadow-[0_0_25px_#3fefef80] max-w-lg mx-auto "
       >
+        {user?.photos?.[0]?.value && (
+          <img
+            src={user.photos[0].value}
+            alt="User avatar"
+            className="w-16 h-16 rounded-full mx-auto mb-4"
+          />
+        )}
         <h1 className="text-3xl font-extrabold text-center mb-8 text-[#3fefef] animate-pulse">
-          Welcome, Twitter Warrior!
+          Welcome, {user ? user.displayName : "User"}! 🚀
         </h1>
 
         <div className="space-y-6">
@@ -132,7 +150,7 @@ export default function App() {
               ))}
             </select>
           </div>
-          
+
           <div>
             <label className="block text-[#3fefef] mb-2">
               👤 Select Gender
