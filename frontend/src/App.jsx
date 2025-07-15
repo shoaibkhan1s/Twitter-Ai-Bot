@@ -10,8 +10,12 @@ export default function App() {
   const [captionType, setCaptionType] = useState("motivational");
   const [gender, setGender] = useState("neutral");
   const [msg, setMsg] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading1, setLoading1] = useState(false);
+  const [loading2, setLoading2] = useState(false);
   const [user, setUser] = useState(null);
+  const [image, setImage] = useState(null);
+  const [postSuccess, setPostSuccess] = useState(false); // for "Post on X"
+const [generateSuccess, setGenerateSuccess] = useState(false); // for "Generate Post"
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -33,7 +37,25 @@ export default function App() {
   }, []);
 
   const handlePost = async () => {
-    setLoading(true);
+    setLoading1(true);
+    setPostSuccess(false);
+    try {
+      const res = await axios.post("http://localhost:3000/tweet/post", {
+        token,
+        secret,
+        msg,
+      });
+    } catch (err) {
+      console.log(err)
+      setMsg("❌ Something went wrong!");
+    }
+    setLoading1(false);
+    setPostSuccess(true);
+  };
+
+  const generatePost = async () => {
+    setLoading2(true);
+    setGenerateSuccess(false);
     try {
       const res = await axios.post("http://localhost:3000/tweet", {
         token,
@@ -42,11 +64,15 @@ export default function App() {
         captionType,
         gender,
       });
+      setImage(res.data.image || null);
+      
+
       setMsg(res.data.caption || "Tweet posted!");
     } catch (err) {
       setMsg("❌ Something went wrong!");
     }
-    setLoading(false);
+    setLoading2(false);
+    setGenerateSuccess(true);
   };
 
   const logout = () => {
@@ -184,17 +210,39 @@ export default function App() {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={handlePost}
-            disabled={loading}
+            onClick={generatePost}
+            disabled={loading2}
             className="w-full bg-black border border-[#3fefef] text-[#3fefef] font-semibold py-3 rounded-xl transition duration-300 hover:shadow-[0_0_20px_#3fefefaa]"
           >
-            {loading ? "Posting..." : "Generate & Post"}
+            {loading2
+    ? "Generating Post..."
+    : generateSuccess
+    ? "Post Generated ✅"
+    : "Generate Post"}
           </motion.button>
+
           {msg && (
             <p className="text-center mt-4 text-[#c084fc] animate-fade-in">
               {msg}
+              {image && <img src={image} alt="image" className="w-50 h-50" />}
+              <button className="mt-6 w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-xl transition duration-300">
+                Preview on X
+              </button>
+              <button
+                className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl transition duration-300"
+                onClick={handlePost}
+                disabled={loading1 || postSuccess}
+                
+              >
+               {loading1
+    ? "Posting..."
+    : postSuccess
+    ? "Tweet Posted ✅"
+    : "Post on X"}
+              </button>
             </p>
           )}
+
           <button
             onClick={logout}
             className="mt-6 w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-xl transition duration-300"

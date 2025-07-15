@@ -16,9 +16,12 @@ const generateImagePrompt = require("./utils/promptMaker");
 dotenv.config();
 const app = express();
 
+
 // Middleware
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
@@ -56,7 +59,17 @@ app.get("/me", (req, res) => {
   res.json({ user: req.user });
 });
 
+// Main tweet posting route
+app.post("/tweet/post", async (req, res) => {
+  try {
+    const { token, secret, msg, image } = req.body;
 
+    await postToTwitter(msg, "newImage.png", { token, secret });
+  } catch (err) {
+    console.error("❌ Error:", err);
+    res.status(500).json({ error: "Tweet failed" });
+  }
+});
 
 // Main tweet posting route
 app.post("/tweet", async (req, res) => {
@@ -64,24 +77,33 @@ app.post("/tweet", async (req, res) => {
     const { token, secret, interest, captionType, gender } = req.body;
 
     const caption = await generateCaption(interest, captionType);
-    const prompt = await generateImagePrompt(caption, gender,interest);
-console.log(prompt)
-    const imageUrl = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=77&model=turbo`;
+    const prompt = await generateImagePrompt(caption, gender, interest);
+    console.log(prompt);
+    const imageUrl = `https://pollinations.ai/p/${encodeURIComponent(
+      prompt
+    )}?width=1024&height=1024&seed=77&model=turbo`;
     const response = await fetch(imageUrl);
     const buffer = await response.buffer();
-  fs.writeFileSync("image.png", buffer);
+    fs.writeFileSync("image.png", buffer);
 
-    await sharp("image.png")
+    const image = await sharp("image.png")
       .metadata()
       .then(({ width, height }) =>
         sharp("image.png")
           .extract({ left: 0, top: 0, width, height: height - 55 })
           .toFile("newImage.png")
       );
+    const newBuffer = fs.readFileSync("newImage.png");
+    const base64Image = newBuffer.toString("base64");
+    const mimeType = "image/png";
 
-    await postToTwitter(caption, "newImage.png", { token, secret });
+    // await postToTwitter(caption, "newImage.png", { token, secret });
 
-    res.json({ success: true, caption });
+    res.json({
+      success: true,
+      caption,
+      image: `data:${mimeType};base64,${base64Image}`,
+    });
   } catch (err) {
     console.error("❌ Error:", err);
     res.status(500).json({ error: "Tweet failed" });
@@ -93,13 +115,13 @@ app.get("/auth/twitter/session", (req, res) => {
   if (req.session.token && req.session.secret) {
     res.json({
       user: req.user,
-      token: req.session.token, 
-      secret: req.session.secret });
+      token: req.session.token,
+      secret: req.session.secret,
+    });
   } else {
     res.status(401).json({ error: "No active session" });
   }
 });
-
 
 app.listen(3000, () => {
   console.log("✅ Backend running on http://localhost:3000");
