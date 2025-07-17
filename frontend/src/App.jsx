@@ -15,7 +15,7 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [image, setImage] = useState(null);
   const [postSuccess, setPostSuccess] = useState(false); // for "Post on X"
-const [generateSuccess, setGenerateSuccess] = useState(false); // for "Generate Post"
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -45,17 +45,17 @@ const [generateSuccess, setGenerateSuccess] = useState(false); // for "Generate 
         secret,
         msg,
       });
+      setPostSuccess(true);
     } catch (err) {
-      console.log(err)
+      console.log(err);
       setMsg("❌ Something went wrong!");
     }
     setLoading1(false);
-    setPostSuccess(true);
   };
 
   const generatePost = async () => {
     setLoading2(true);
-    setGenerateSuccess(false);
+
     try {
       const res = await axios.post("http://localhost:3000/tweet", {
         token,
@@ -65,14 +65,12 @@ const [generateSuccess, setGenerateSuccess] = useState(false); // for "Generate 
         gender,
       });
       setImage(res.data.image || null);
-      
 
       setMsg(res.data.caption || "Tweet posted!");
     } catch (err) {
       setMsg("❌ Something went wrong!");
     }
     setLoading2(false);
-    setGenerateSuccess(true);
   };
 
   const logout = () => {
@@ -115,6 +113,15 @@ const [generateSuccess, setGenerateSuccess] = useState(false); // for "Generate 
     { value: "savage", label: "Savage" },
     { value: "weird", label: "Weirdly Cool" },
     { value: "chill", label: "Chill & Relatable" },
+    { value: "meme-lord", label: "Meme-Lord" },
+    { value: "professor-vibes", label: "Professor Vibes" },
+    { value: "soft-aesthetic", label: "Soft Aesthetic" },
+    { value: "future-forward", label: "Future-Forward" },
+    { value: "hustle-culture", label: "Hustle Culture" },
+    { value: "minimalist", label: "Minimalist" },
+    { value: "ceo-grindset", label: "CEO Grindset" },
+    { value: "growth-guru", label: "Growth Guru" },
+    { value: "page-turner", label: "Page-Turner" },
   ];
 
   if (!token || !secret) {
@@ -214,33 +221,90 @@ const [generateSuccess, setGenerateSuccess] = useState(false); // for "Generate 
             disabled={loading2}
             className="w-full bg-black border border-[#3fefef] text-[#3fefef] font-semibold py-3 rounded-xl transition duration-300 hover:shadow-[0_0_20px_#3fefefaa]"
           >
-            {loading2
-    ? "Generating Post..."
-    : generateSuccess
-    ? "Post Generated ✅"
-    : "Generate Post"}
+            {loading2 ? "Generating Post..." : "Generate Post"}
           </motion.button>
 
           {msg && (
-            <p className="text-center mt-4 text-[#c084fc] animate-fade-in">
-              {msg}
-              {image && <img src={image} alt="image" className="w-50 h-50" />}
-              <button className="mt-6 w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-xl transition duration-300">
-                Preview on X
-              </button>
+            <div className="mt-6 text-[#c084fc] animate-fade-in">
+              {/* Tweet-style preview toggle */}
+              {!showPreview ? (
+                <>
+                  <p className="text-center whitespace-pre-wrap">{msg}</p>
+                  {image && (
+                    <img
+                      src={image}
+                      alt="Generated"
+                      className="mx-auto mt-4 rounded-xl max-w-full border border-[#444]"
+                    />
+                  )}
+
+                  <button
+                    className="mt-6 w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-xl transition duration-300"
+                    onClick={() => setShowPreview(true)}
+                  >
+                    Preview on X
+                  </button>
+                </>
+              ) : (
+                <>
+                  {/* X-style tweet preview */}
+                  <div className="bg-[#16181c] border border-[#2f3336] rounded-xl p-4 mt-4 text-white">
+                    <div className="flex items-start gap-3">
+                      <img
+                        src={user?.photos?.[0]?.value}
+                        alt="User avatar"
+                        className="w-10 h-10 rounded-full"
+                      />
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold">{user?.displayName}</span>
+                          <span className="text-gray-400">
+                            @{user?.username}
+                          </span>
+                          <span className="text-gray-400 text-sm">· now</span>
+                        </div>
+                        <p className="mt-2 whitespace-pre-wrap">{msg}</p>
+                        {image && (
+                          <img
+                            src={image}
+                            alt="Generated"
+                            className="mt-3 rounded-2xl border border-[#2f3336] max-w-full"
+                          />
+                        )}
+                        <div className="mt-4 flex text-gray-500 text-sm justify-around">
+                          <span>💬 0</span>
+                          <span>🔁 0</span>
+                          <span>❤️ 0</span>
+                          <span>📊</span>
+                          <span>🔗</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Close Preview Button */}
+                  <button
+                    className="mt-4 w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-xl transition duration-300"
+                    onClick={() => setShowPreview(false)}
+                  >
+                    Close Preview
+                  </button>
+                </>
+              )}
+
+              {/* Post on X button */}
               <button
-                className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl transition duration-300"
+                className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl transition duration-300 disabled:opacity-50"
                 onClick={handlePost}
                 disabled={loading1 || postSuccess}
-                
               >
-               {loading1
-    ? "Posting..."
-    : postSuccess
-    ? "Tweet Posted ✅"
-    : "Post on X"}
+                {loading1
+                  ? "Posting..."
+                  : postSuccess
+                  ? "Tweet Posted ✅"
+                  : "Post on X"}
               </button>
-            </p>
+            </div>
           )}
 
           <button
