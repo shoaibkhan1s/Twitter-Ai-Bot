@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
+import { SyncLoader } from "react-spinners";
 axios.defaults.withCredentials = true;
 
 export default function App() {
@@ -8,23 +9,25 @@ export default function App() {
   const [secret, setSecret] = useState(null);
   const [interest, setInterest] = useState("tech");
   const [captionType, setCaptionType] = useState("motivational");
-  const [gender, setGender] = useState("neutral");
+  const [gender, setGender] = useState("male");
   const [msg, setMsg] = useState("");
   const [loading1, setLoading1] = useState(false);
   const [loading2, setLoading2] = useState(false);
+  const [loading3, setLoading3] = useState(false);
   const [user, setUser] = useState(null);
   const [image, setImage] = useState(null);
-  const [postSuccess, setPostSuccess] = useState(false); // for "Post on X"
+  const [filename, setFilename] = useState("");
+  const [postSuccess, setPostSuccess] = useState(false);
+  const [captionSuccess, setCaptionSuccess] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [language,setLanguage] = useState("English")
 
   useEffect(() => {
     const fetchSession = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:3000/auth/twitter/session",
-          {
-            withCredentials: true,
-          }
+          `${import.meta.env.VITE_BASE_URL}/auth/twitter/session`,
+          { withCredentials: true }
         );
         setUser(res.data.user);
         setToken(res.data.token);
@@ -36,18 +39,39 @@ export default function App() {
     fetchSession();
   }, []);
 
-  const handlePost = async () => {
-    setLoading1(true);
-    setPostSuccess(false);
+  const handlePostCaption = async () => {
+    setLoading3(true);
+    setCaptionSuccess(false);
     try {
-      const res = await axios.post("http://localhost:3000/tweet/post", {
+      await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/tweet/caption`, {
         token,
         secret,
         msg,
       });
+      setCaptionSuccess(true);
+    } catch (err) {
+      setMsg("❌ Something went wrong!");
+    }
+    setLoading3(false);
+  };
+
+  const handlePost = async () => {
+    setLoading1(true);
+    setPostSuccess(false);
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/tweet/post`,
+        {
+          token,
+          secret,
+          msg,
+          filename,
+        },
+        { withCredentials: true }
+      );
       setPostSuccess(true);
     } catch (err) {
-      console.log(err);
       setMsg("❌ Something went wrong!");
     }
     setLoading1(false);
@@ -55,18 +79,18 @@ export default function App() {
 
   const generatePost = async () => {
     setLoading2(true);
-
     try {
-      const res = await axios.post("http://localhost:3000/tweet", {
+      const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/tweet`, {
         token,
         secret,
         interest,
         captionType,
         gender,
+language,
       });
       setImage(res.data.image || null);
-
       setMsg(res.data.caption || "Tweet posted!");
+      setFilename(res.data.filename || "");
     } catch (err) {
       setMsg("❌ Something went wrong!");
     }
@@ -74,37 +98,14 @@ export default function App() {
   };
 
   const logout = () => {
-    window.location.href = "http://localhost:3000/auth/twitter/logout";
+    window.location.href = `${import.meta.env.VITE_BASE_URL}/auth/twitter/logout`;
   };
 
   const interests = [
-    "Tech",
-    "Funny",
-    "Finance",
-    "Memes",
-    "Motivation",
-    "DevLife",
-    "Gaming",
-    "Cyber Security",
-    "Health",
-    "Education",
-    "Fitness",
-    "Travel",
-    "Food",
-    "Fashion",
-    "Music",
-    "Art",
-    "Sports",
-    "News",
-    "Lifestyle",
-    "AI",
-    "Startups",
-    "Productivity",
-    "Emotional Growth",
-    "Spirituality",
-    "Business",
-    "Marketing",
-    "Books",
+    "Tech", "Funny", "Finance", "Memes", "Motivation", "DevLife", "Gaming",
+    "Cyber Security", "Health", "Education", "Fitness", "Travel", "Food",
+    "Fashion", "Music", "Art", "Sports", "News", "Lifestyle", "AI", "Startups",
+    "Productivity", "Emotional Growth", "Spirituality", "Business", "Marketing", "Books",
   ];
 
   const captionStyles = [
@@ -123,7 +124,41 @@ export default function App() {
     { value: "growth-guru", label: "Growth Guru" },
     { value: "page-turner", label: "Page-Turner" },
   ];
+const languages = [
+  { value: "english", label: "English" },
+  { value: "hindi", label: "Hindi" },
+  { value: "spanish", label: "Spanish" },
+  { value: "hinglish", label: "Hinglish" },
+  { value: "french", label: "French" },
+  { value: "german", label: "German" },
+  { value: "chinese", label: "Chinese" },
+  { value: "punjabi", label: "Punjabi" },
+  { value: "japanese", label: "Japanese" },
+  { value: "russian", label: "Russian" },
+  { value: "arabic", label: "Arabic" },
+  { value: "portuguese", label: "Portuguese" },
+  { value: "italian", label: "Italian" },
+  { value: "bengali", label: "Bengali" },
+  { value: "urdu", label: "Urdu" },
+  { value: "turkish", label: "Turkish" },
+  { value: "korean", label: "Korean" },
+  { value: "persian", label: "Persian" },
+  { value: "swahili", label: "Swahili" },
+  { value: "dutch", label: "Dutch" },
+  { value: "greek", label: "Greek" },
+  { value: "thai", label: "Thai" },
+  { value: "polish", label: "Polish" },
+  { value: "romanian", label: "Romanian" },
+  { value: "hungarian", label: "Hungarian" },
+  { value: "czech", label: "Czech" },
+  { value: "hebrew", label: "Hebrew" },
+  { value: "indonesian", label: "Indonesian" },
+  { value: "malay", label: "Malay" },
+  { value: "vietnamese", label: "Vietnamese" },
+  { value: "filipino", label: "Filipino" },
+  { value: "swedish", label: "Swedish" },
 
+];
   if (!token || !secret) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black text-white p-6">
@@ -137,7 +172,7 @@ export default function App() {
             🚀 Twitter Auto Poster
           </h1>
           <a
-            href="http://localhost:3000/auth/twitter/login"
+            href={`${import.meta.env.VITE_BASE_URL}/auth/twitter/login`}
             className="bg-black border border-[#3fefef] hover:shadow-[0_0_20px_#3fefefaa] text-[#3fefef] px-6 py-3 rounded-xl font-semibold transition-all duration-300"
           >
             Login with Twitter
@@ -193,9 +228,9 @@ export default function App() {
               value={gender}
               onChange={(e) => setGender(e.target.value)}
             >
-              <option value="neutral">Neutral</option>
               <option value="male">Male</option>
               <option value="female">Female</option>
+              <option value="neutral">Neutral</option>
             </select>
           </div>
           <div>
@@ -214,19 +249,54 @@ export default function App() {
               ))}
             </select>
           </div>
+
+             <div>
+            <label className="block text-[#3fefef] mb-2">
+              Language for caption
+            </label>
+            <select
+              className="w-full bg-black border border-[#3fefef] p-3 rounded-xl text-white focus:outline-none"
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+            >
+              {languages.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.09, boxShadow: "0 0 40px #00f6ffcc" }}
+            whileTap={{ scale: 0.97 }}
             onClick={generatePost}
             disabled={loading2}
-            className="w-full bg-black border border-[#3fefef] text-[#3fefef] font-semibold py-3 rounded-xl transition duration-300 hover:shadow-[0_0_20px_#3fefefaa]"
+            className="w-full bg-gradient-to-r from-[#00f6ff] via-[#16181c] to-[#3fefef] border border-[#00f6ff] text-white font-bold py-3 rounded-xl transition-all duration-300 shadow-[0_0_30px_#00f6ff88] relative overflow-hidden"
           >
-            {loading2 ? "Generating Post..." : "Generate Post"}
+            <span className={loading2 ? "opacity-80" : ""}>
+              {loading2 ? (
+                <span className="flex items-center justify-center gap-3">
+                  <span className="animate-pulse">
+                    <SyncLoader
+                      loading={true}
+                      color="#00f6ff"
+                      size={10}
+                      speedMultiplier={1.2}
+                    />
+                  </span>
+                  <span className="animate-pulse text-[#00f6ff] font-semibold drop-shadow-[0_0_10px_#00f6ff]">
+                    Generating Post...
+                  </span>
+                </span>
+              ) : (
+                "Generate Post"
+              )}
+            </span>
           </motion.button>
 
           {msg && (
             <div className="mt-6 text-[#c084fc] animate-fade-in">
-              {/* Tweet-style preview toggle */}
               {!showPreview ? (
                 <>
                   <p className="text-center whitespace-pre-wrap">{msg}</p>
@@ -247,7 +317,6 @@ export default function App() {
                 </>
               ) : (
                 <>
-                  {/* X-style tweet preview */}
                   <div className="bg-[#16181c] border border-[#2f3336] rounded-xl p-4 mt-4 text-white">
                     <div className="flex items-start gap-3">
                       <img
@@ -282,7 +351,6 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Close Preview Button */}
                   <button
                     className="mt-4 w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-xl transition duration-300"
                     onClick={() => setShowPreview(false)}
@@ -292,17 +360,60 @@ export default function App() {
                 </>
               )}
 
-              {/* Post on X button */}
+              <button
+                className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl transition duration-300 disabled:opacity-50"
+                onClick={handlePostCaption}
+                disabled={loading3 || captionSuccess}
+              >
+                <span className={loading3 ? "opacity-80" : ""}>
+                  {loading3 ? (
+                    <span className="flex items-center justify-center gap-3">
+                      <span className="animate-pulse drop-shadow-[0_0_10px_#c084fc]">
+                        <SyncLoader
+                          loading={true}
+                          color="#c084fc"
+                          size={12}
+                          speedMultiplier={1.3}
+                        />
+                      </span>
+                      <span className="animate-pulse text-[#c084fc] font-semibold drop-shadow-[0_0_10px_#c084fc]">
+                        Posting Caption...
+                      </span>
+                    </span>
+                  ) : captionSuccess ? (
+                    "Tweet Posted ✅"
+                  ) : (
+                    "Post Caption on X"
+                  )}
+                </span>
+              </button>
+
               <button
                 className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl transition duration-300 disabled:opacity-50"
                 onClick={handlePost}
                 disabled={loading1 || postSuccess}
               >
-                {loading1
-                  ? "Posting..."
-                  : postSuccess
-                  ? "Tweet Posted ✅"
-                  : "Post on X"}
+                <span className={loading1 ? "opacity-80" : ""}>
+                  {loading1 ? (
+                    <span className="flex items-center justify-center gap-3">
+                      <span className="animate-pulse drop-shadow-[0_0_10px_#00f6ff]">
+                        <SyncLoader
+                          loading={true}
+                          color="#00f6ff"
+                          size={12}
+                          speedMultiplier={1.3}
+                        />
+                      </span>
+                      <span className="animate-pulse text-[#00f6ff] font-semibold drop-shadow-[0_0_10px_#00f6ff]">
+                        Posting Caption + Image...
+                      </span>
+                    </span>
+                  ) : postSuccess ? (
+                    "Tweet Posted ✅"
+                  ) : (
+                    "Post Caption + Image on X"
+                  )}
+                </span>
               </button>
             </div>
           )}
