@@ -15,6 +15,7 @@ const twitterRoutes = require("./routes/twitter");
 const generateCaption = require("./utils/caption").generateCaption;
 const generateImagePrompt = require("./utils/promptMaker");
 const Post = require("./models/post.model");
+const User = require("./models/user.model");
 const mongoose = require("mongoose");
 const ExpressError = require("./utils/ExpressErrorHandler");
 dotenv.config();
@@ -107,11 +108,12 @@ app.post("/tweet/post", isLoggedIn, async (req, res) => {
       imageUrl = `${req.protocol}://${req.get("host")}/uploads/${filename}`;
       imagePath = path.join("uploads", filename);
     }
+    let user = await User.findOne({ twitterId: req.user.id });
 
     let tweetId = await postToTwitter(msg, imagePath, { token, secret });
 
     let post = new Post({
-      user: req.user?._id || "unknown",
+      user: user?._id,
       tweetId: tweetId,
       caption: msg,
       imageUrl: imageUrl,
@@ -131,8 +133,9 @@ app.post("/tweet/caption", isLoggedIn, async (req, res) => {
     const { token, secret, msg } = req.body;
     const tweetId = await postCaptionToTwitter(msg, { token, secret });
     res.json({ success: true, message: "Caption posted successfully!" });
+    let user = await User.findOne({ twitterId: req.user.id });
     let post = new Post({
-      user: req.user?._id || "unknown",
+      user: user._id,
       tweetId: tweetId,
       caption: msg,
       imageUrl: "",
@@ -197,6 +200,24 @@ app.post("/tweet", isLoggedIn, async (req, res) => {
   }
 });
 
+app.get("/seeTweets", isLoggedIn,async (req,res)=>{
+  try{
+  let user = await User.findOne({twitterId: req.user.id});
+      let posts = await Post.find({user: user._id});
+  
+      for(let post of posts){
+        console.log(post)
+        res.status(200).json({
+          caption: post.caption,
+          imageUrl : post.imageUrl,
+        })
+      }
+    } catch(err){
+      console.log("error in /seeTweets : ",err)
+    }
+   
+})
+
 // New secure route to serve token/secret from session
 app.get("/auth/twitter/session", (req, res) => {
   if (req.session.token && req.session.secret) {
@@ -210,8 +231,8 @@ app.get("/auth/twitter/session", (req, res) => {
   }
 });
 
-
-
 app.listen(3000, () => {
   console.log("✅ Backend running on http://localhost:3000");
 });
+
+//error in /seeTweets :  Error [ERR_HTTP_HEADERS_SENT]: Cannot set headers after they are sent to the client

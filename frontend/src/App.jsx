@@ -21,6 +21,8 @@ export default function App() {
   const [captionSuccess, setCaptionSuccess] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [language,setLanguage] = useState("English")
+  const [seeCaption,setSeeCaption] = useState([])
+  const [seeImage,setSeeImage] = useState([])
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -96,6 +98,21 @@ language,
     }
     setLoading2(false);
   };
+
+  const seeTweets = async()=>{
+    try{
+const res = axios.get(
+   `${import.meta.env.VITE_BASE_URL}/seeTweets`,
+          { withCredentials: true }
+        )
+          console.log("res : ",res.data)
+          setSeeCaption(res.data.caption);
+          setSeeImage(res.data.imageUrl)
+    } catch(err){
+      console.log(" error ", err)
+    }
+  }
+
 
   const logout = () => {
     window.location.href = `${import.meta.env.VITE_BASE_URL}/auth/twitter/logout`;
@@ -417,7 +434,12 @@ const languages = [
               </button>
             </div>
           )}
-
+  <button
+            onClick={seeTweets}
+            className="mt-6 w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-xl transition duration-300"
+          >
+           See my tweets
+          </button>
           <button
             onClick={logout}
             className="mt-6 w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-xl transition duration-300"

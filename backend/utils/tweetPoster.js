@@ -2,6 +2,7 @@ const fs = require("fs");
 const { TwitterApi } = require("twitter-api-v2");
 
 async function postToTwitter(caption, imagePath, { token, secret }) {
+  try{
   const client = new TwitterApi({
     appKey: process.env.TWITTER_CONSUMER_KEY,
     appSecret: process.env.TWITTER_CONSUMER_SECRET,
@@ -25,10 +26,13 @@ async function postToTwitter(caption, imagePath, { token, secret }) {
 const { data } = await client.v2.tweet(tweetOptions);
   return data.id;
   console.log("✅ Tweet posted!", data.id);
+}catch(err){
+    console.error("error in twitter api : ", err)
+  }
 }
 
-
 async function postCaptionToTwitter(caption, { token, secret }) {
+  try{
   const client = new TwitterApi({
     appKey: process.env.TWITTER_CONSUMER_KEY,
     appSecret: process.env.TWITTER_CONSUMER_SECRET,
@@ -41,6 +45,9 @@ async function postCaptionToTwitter(caption, { token, secret }) {
   });
   return data.id;
   console.log("✅ Tweet posted!", data.id);
+  } catch(err){
+    console.error("error in twitter api : ", err)
+  }
 }
 
 
