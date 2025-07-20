@@ -135,7 +135,7 @@ app.post("/tweet/caption", isLoggedIn, async (req, res) => {
     res.json({ success: true, message: "Caption posted successfully!" });
     let user = await User.findOne({ twitterId: req.user.id });
     let post = new Post({
-      user: user._id,
+      user: user?._id,
       tweetId: tweetId,
       caption: msg,
       imageUrl: "",
@@ -144,7 +144,7 @@ app.post("/tweet/caption", isLoggedIn, async (req, res) => {
     await post.save();
   } catch (err) {
     console.error("❌ Error:", err);
-    res.status(500).json({ error: "Caption post failed" });
+    
   }
 });
 
@@ -169,7 +169,7 @@ app.post("/tweet", isLoggedIn, async (req, res) => {
     const filepath = path.join("uploads", filename);
     fs.writeFileSync(filepath, buffer);
 
-    // Optionally crop image
+    
     await sharp(filepath)
       .metadata()
       .then(({ width, height }) =>
@@ -200,23 +200,16 @@ app.post("/tweet", isLoggedIn, async (req, res) => {
   }
 });
 
-app.get("/seeTweets", isLoggedIn,async (req,res)=>{
-  try{
-  let user = await User.findOne({twitterId: req.user.id});
-      let posts = await Post.find({user: user._id});
-  
-      for(let post of posts){
-        console.log(post)
-        res.status(200).json({
-          caption: post.caption,
-          imageUrl : post.imageUrl,
-        })
-      }
-    } catch(err){
-      console.log("error in /seeTweets : ",err)
-    }
-   
-})
+app.get("/seeTweets", isLoggedIn, async (req, res) => {
+  try {
+    let user = await User.findOne({ twitterId: req.user?.id });
+    let posts = await Post.find({ user: user?._id });
+res.json(posts)
+
+  } catch (err) {
+    console.log("error in /seeTweets : ", err);
+  }
+});
 
 // New secure route to serve token/secret from session
 app.get("/auth/twitter/session", (req, res) => {
