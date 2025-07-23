@@ -3,17 +3,7 @@ const passport = require("passport");
 const router = express.Router();
 const User = require("../models/user.model");
 
-router.get("/login", passport.authenticate("twitter"), async (req,res)=>{
-   const user = new User({
-      username: req.user.username,
-      displayName: req.user.displayName,
-      twitterId: req.user.id,
-      avatar: req.user.photos[0].value,
-    });
-await user.save()
-console.log(" user is here : ", user)
-});
-
+router.get("/login", passport.authenticate("twitter"))
 router.get(
   "/callback",
   passport.authenticate("twitter", {
@@ -24,7 +14,14 @@ router.get(
     req.session.token = req.user.token;
     req.session.secret = req.user.tokenSecret;
  
-   
+    const user = new User({
+      username: req.user.username,
+      displayName: req.user.displayName,
+      twitterId: req.user.id,
+      avatar: req.user.photos[0].value,
+    });
+await user.save()
+console.log(" user is here : ", user)
     // Redirect without token/secret in URL
     res.redirect("http://localhost:5173");
   }

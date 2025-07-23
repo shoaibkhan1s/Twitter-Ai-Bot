@@ -22,7 +22,9 @@ export default function App() {
   const [captionSuccess, setCaptionSuccess] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [language,setLanguage] = useState("English")
-  // const [seeTweet,setSeeTweet] = useState([])
+
+  const [isAnyBtnClick,setIsAnyBtnClick] = useState(false)
+  const [isPostBtnClick,setIsPostBtnClick] = useState(false)
 
 
   useEffect(() => {
@@ -45,6 +47,8 @@ export default function App() {
   const handlePostCaption = async () => {
     setLoading3(true);
     setCaptionSuccess(false);
+    setIsAnyBtnClick(true)
+setIsPostBtnClick(true)
     try {
       await axios.post(
         `${import.meta.env.VITE_BASE_URL}/tweet/caption`, {
@@ -57,11 +61,14 @@ export default function App() {
       setMsg("❌ Something went wrong!");
     }
     setLoading3(false);
+     setIsAnyBtnClick(false)
   };
 
   const handlePost = async () => {
     setLoading1(true);
     setPostSuccess(false);
+    setIsAnyBtnClick(true)
+    setIsPostBtnClick(true)
     try {
       const res = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/tweet/post`,
@@ -78,10 +85,14 @@ export default function App() {
       setMsg("❌ Something went wrong!");
     }
     setLoading1(false);
+     setIsAnyBtnClick(false)
   };
 
   const generatePost = async () => {
     setLoading2(true);
+    setIsAnyBtnClick(true)
+   setMsg("")
+   setIsPostBtnClick(false)
     try {
       const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/tweet`, {
         token,
@@ -98,24 +109,13 @@ language,
       setMsg("❌ Something went wrong!");
     }
     setLoading2(false);
+     setIsAnyBtnClick(false)
+     setCaptionSuccess(false)
+     setPostSuccess(false)
+    
   };
 
 
-  
-
-//   const seeTweets = async ()=>{
-//     try{
-// const res = await axios.get(
-//    `${import.meta.env.VITE_BASE_URL}/seeTweets`,
-//           { withCredentials: true }
-//         )
-//           console.log("res : ",res.data)
-//          setSeeTweet(res.data)
-          
-//     } catch(err){
-//       console.log(" error ", err)
-//     }
-//   }
 
 
   const logout = () => {
@@ -292,7 +292,7 @@ const languages = [
             whileHover={{ scale: 1.09, boxShadow: "0 0 40px #00f6ffcc" }}
             whileTap={{ scale: 0.97 }}
             onClick={generatePost}
-            disabled={loading2}
+            disabled={loading2 || isAnyBtnClick}
             className="w-full bg-gradient-to-r from-[#00f6ff] via-[#16181c] to-[#3fefef] border border-[#00f6ff] text-white font-bold py-3 rounded-xl transition-all duration-300 shadow-[0_0_30px_#00f6ff88] relative overflow-hidden"
           >
             <span className={loading2 ? "opacity-80" : ""}>
@@ -384,7 +384,7 @@ const languages = [
               <button
                 className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl transition duration-300 disabled:opacity-50"
                 onClick={handlePostCaption}
-                disabled={loading3 || captionSuccess}
+                disabled={loading3 || captionSuccess  || isPostBtnClick}
               >
                 <span className={loading3 ? "opacity-80" : ""}>
                   {loading3 ? (
@@ -412,7 +412,7 @@ const languages = [
               <button
                 className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl transition duration-300 disabled:opacity-50"
                 onClick={handlePost}
-                disabled={loading1 || postSuccess}
+                disabled={loading1 || postSuccess  ||isPostBtnClick}
               >
                 <span className={loading1 ? "opacity-80" : ""}>
                   {loading1 ? (
