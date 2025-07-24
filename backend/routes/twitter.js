@@ -18,7 +18,7 @@ router.get(
       username: req.user.username,
       displayName: req.user.displayName,
       twitterId: req.user.id,
-      avatar: req.user.photos[0].value,
+      avatar: req.user.photos[0]?.value,
     });
 await user.save()
 console.log(" user is here : ", user)

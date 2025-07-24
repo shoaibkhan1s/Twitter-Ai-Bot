@@ -12,7 +12,7 @@ const path = require("path");
 const { isLoggedIn } = require("./middleware");
 const { postCaptionToTwitter, postToTwitter } = require("./utils/tweetPoster");
 const twitterRoutes = require("./routes/twitter");
-const generateCaption = require("./utils/caption").generateCaption;
+const  {generateCaption} = require("./utils/caption");
 const generateImagePrompt = require("./utils/promptMaker");
 const Post = require("./models/post.model");
 const User = require("./models/user.model");
@@ -144,70 +144,99 @@ app.post("/tweet/caption", isLoggedIn, async (req, res) => {
     await post.save();
   } catch (err) {
     console.error("❌ Error:", err);
-    
   }
 });
-
-// Main tweet generation route (generates image and caption)
+// Tweet generation with image and caption
 app.post("/tweet", isLoggedIn, async (req, res) => {
   try {
-    const { token, secret, interest, captionType, gender, language } = req.body;
+    const {
+      interest,
+      captionType,
+      gender,
+      language,
+      targetAudience,
+      captionLength,
+      mood,
+      emojiIntensity,
+    } = req.body;
 
-    const caption = await generateCaption(interest, captionType, language);
-    const prompt = await generateImagePrompt(caption, gender, interest);
-    const imageUrl = `https://pollinations.ai/p/${encodeURIComponent(
-      prompt
-    )}?width=1024&height=1024&seed=77&model=turbo`;
-    const response = await fetch(imageUrl);
-    const buffer = await response.buffer();
+    // Debug log for req.body
+    console.log("📥 /tweet req.body:", JSON.stringify(req.body, null, 2));
 
-    // Save image to uploads folder
-    if (!fs.existsSync("uploads")) {
-      fs.mkdirSync("uploads");
+    // Validate required parameters
+    const requiredParams = { interest, captionType, language, targetAudience, captionLength, mood, emojiIntensity };
+    for (const [key, value] of Object.entries(requiredParams)) {
+      if (value === undefined || value === null) {
+        throw new ExpressError(`Missing or invalid parameter: ${key}`, 400);
+      }
     }
+
+    // Generate caption
+    const caption = await generateCaption(
+      interest,
+       captionType,
+      language,
+      targetAudience,
+      captionLength,
+      mood,
+      emojiIntensity,
+    );
+
+    // Debug log for caption
+    console.log("📝 Generated caption:", caption);
+
+    // Generate image
+    const prompt = await generateImagePrompt(caption, gender, interest);
+    const imageUrl = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=77&model=turbo`;
+    const response = await fetch(imageUrl);
+    if (!response.ok) throw new ExpressError("Failed to fetch image", 500);
+
+    const buffer = await response.buffer();
+    if (!fs.existsSync("uploads")) fs.mkdirSync("uploads");
+
     const filename = `${Date.now()}_generated.png`;
     const filepath = path.join("uploads", filename);
     fs.writeFileSync(filepath, buffer);
 
-    
     await sharp(filepath)
       .metadata()
       .then(({ width, height }) =>
         sharp(filepath)
           .extract({ left: 0, top: 0, width, height: height - 55 })
-          .toFile(path.join("uploads", "cropped_" + filename))
+          .toFile(path.join("uploads", `cropped_${filename}`))
       );
 
-    const croppedFilename = "cropped_" + filename;
+    const croppedFilename = `cropped_${filename}`;
     const croppedPath = path.join("uploads", croppedFilename);
     const newBuffer = fs.readFileSync(croppedPath);
     const base64Image = newBuffer.toString("base64");
     const mimeType = "image/png";
-    const publicImageUrl = `${req.protocol}://${req.get(
-      "host"
-    )}/uploads/${croppedFilename}`;
+    const publicImageUrl = `${req.protocol}://${req.get("host")}/uploads/${croppedFilename}`;
 
     res.json({
       success: true,
       caption,
       image: `data:${mimeType};base64,${base64Image}`,
       imageUrl: publicImageUrl,
-      filename: croppedFilename, // <-- Send filename to frontend
+      filename: croppedFilename,
     });
   } catch (err) {
-    console.error("❌ Error:", err);
-    res.status(500).json({ error: "Tweet failed" });
+    console.error("❌ Tweet generation error:", err);
+    res.status(err.status || 500).json({ error: err.message || "Tweet generation failed" });
   }
 });
 
+// Fetch user's tweets
 app.get("/seeTweets", isLoggedIn, async (req, res) => {
   try {
-    let user = await User.findOne({ twitterId: req.user?.id });
-    let posts = await Post.find({ user: user?._id });
-res.json(posts)
-
+    console.log(req.user)
+    const user = await User.findOne({ twitterId: req.user.id });
+    if (!user) throw new ExpressError(404,"User not found");
+    const posts = await Post.find({ user: user._id });
+    res.json(posts);
   } catch (err) {
-    console.log("error in /seeTweets : ", err);
+    console.error("❌ seeTweets error:", err);
+    res.status(err.status || 500).json({ error: err.message || "Failed to fetch tweets" });
   }
 });
 
@@ -227,5 +256,3 @@ app.get("/auth/twitter/session", (req, res) => {
 app.listen(3000, () => {
   console.log("✅ Backend running on http://localhost:3000");
 });
-
-//error in /seeTweets :  Error [ERR_HTTP_HEADERS_SENT]: Cannot set headers after they are sent to the client
