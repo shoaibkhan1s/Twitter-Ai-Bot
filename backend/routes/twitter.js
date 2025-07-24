@@ -23,7 +23,7 @@ router.get(
 await user.save()
 console.log(" user is here : ", user)
     // Redirect without token/secret in URL
-    res.redirect("http://localhost:5173");
+    res.redirect("http://localhost:8080");
   }
 );
 
@@ -33,7 +33,7 @@ router.get("/failure", (req, res) => {
 
 router.get("/logout", (req, res) => {
   req.logout(() => {
-    res.redirect("http://localhost:5173");
+    res.redirect("http://localhost:8080");
   });
 });
 
