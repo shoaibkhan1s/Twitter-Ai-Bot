@@ -96,7 +96,8 @@ router.post("/", isLoggedIn, async (req, res) => {
     );
 
     const prompt = await generateImagePrompt(caption, gender, interest);
-    const imageUrl = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=77&model=turbo`;
+    // const imageUrl = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=42&model=kontext`; 
+     const imageUrl = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=42&model=flux&enhance=true`;
 
     const response = await fetch(imageUrl);
     if (!response.ok) throw new ExpressError("Failed to fetch image", 500);

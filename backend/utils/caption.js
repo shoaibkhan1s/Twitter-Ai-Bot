@@ -337,3 +337,96 @@ module.exports = {
 // module.exports = {
 //   generateCaption,
 // };
+
+
+
+// require("dotenv").config({ path: __dirname + "/../.env", override: true });
+// const { GoogleGenAI } = require("@google/genai");
+// const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+// async function generateCaption(
+//   interest,
+//   captionType = "motivational",
+//   language,
+//   targetAudience = "general",
+//   captionLength = "medium",
+//   mood = "happy",
+//   emojiIntensity = "minimal"
+// ) {
+//   try {
+//     const requiredParams = {
+//       interest,
+//       captionType,
+//       language,
+//       targetAudience,
+//       captionLength,
+//       mood,
+//       emojiIntensity,
+//     };
+
+//     for (const [key, value] of Object.entries(requiredParams)) {
+//       if (!value) {
+//         throw new Error(`Missing or invalid parameter: ${key}`);
+//       }
+//     }
+
+//     const lengthLimits = {
+//       "very-short": { min: 5, max: 30 },
+//       short: { min: 30, max: 80 },
+//       medium: { min: 80, max: 150 },
+//       long: { min: 150, max: 220 },
+//       max: { min: 220, max: 280 },
+//     };
+
+//     const { min, max } = lengthLimits[captionLength] || lengthLimits.medium;
+
+//     const emojiCounts = {
+//       none: 0,
+//       minimal: 1,
+//       moderate: 2,
+//       heavy: 3,
+//     };
+
+//     const emojiCount = emojiCounts[emojiIntensity] || 1;
+
+//     const prompt = `
+// You're a social media ghostwriter for a viral personal brand. 
+// Write 1 catchy, viral tweet in ${language}, WITHOUT explicitly mentioning the topic "${interest}" — just imply it with cleverness. 
+
+// Rules:
+// - Tone: ${captionType}
+// - Mood: ${mood}
+// - Target audience: ${targetAudience}
+// - Length: STRICTLY between ${min} and ${max} characters
+// - Emojis: Use exactly ${emojiCount}, placed naturally (beginning, middle or end)
+// - Hashtags: Include 2-3 trending hashtags **relevant to the topic**, placed at the end
+// - No hashtags like #trending or #viral
+// - No quotes or citations
+// - It should feel like a native tweet by a human, not a bot.
+// - Avoid robotic language, obvious AI phrasing, and generic buzzwords.
+// - Use slang, personality, or wit if needed — make it feel real.
+// - Output ONLY the tweet text, nothing else.
+// `;
+
+//     const systemInstruction = `
+// You are a world-class ghostwriter for viral tweets. Your job is to write social-media-native captions that feel real, personal, and human — not like a brand or bot. You understand internet culture, memes, Gen Z slang, emoji placement, and subtle wit. Write like a cool internet person, not like a writer. Stick to the character range, follow the tone, mood, and emoji rules strictly.
+// `;
+
+//     const response = await ai.models.generateContent({
+//       model: "gemini-2.5-flash",
+//       contents: prompt,
+//       config: {
+//         systemInstruction,
+//       },
+//     });
+
+//     return response.text;
+//   } catch (error) {
+//     console.error("❌ Error generating caption:", error);
+//     throw error;
+//   }
+// }
+
+// module.exports = {
+//   generateCaption,
+// };
